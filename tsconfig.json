@@ -12,7 +12,7 @@
       "isolatedModules": true,
       "noEmit": false,
       "jsx": "react",
-      "allowSyntheticDefaultImports": true  // Aquí agregas esta línea
+      "allowSyntheticDefaultImports": true
     },
     "include": ["src"]
   }
