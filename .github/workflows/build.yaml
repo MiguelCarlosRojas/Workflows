@@ -7,39 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Triggered by ${{ github.actor }} with ${{ github.event_name }} event, status is ${{ job.status }}."
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}  # URL de tu API de monitoreo
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}  # Tu clave API de monitoreo
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "success",
-              "job": "build",
-              "message": "Build job completed successfully"
-            }'
 
   sast:
     needs: build
     uses: outofdevops/shared-workflows/.github/workflows/sast.yaml@main
     with:
       run-name: "Static Application Security Testing for Application-One"
-    steps:
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "success",
-              "job": "sast",
-              "message": "SAST job completed successfully"
-            }'
 
   provision-infra:
     runs-on: ubuntu-latest
@@ -64,20 +37,6 @@ jobs:
     uses: outofdevops/application-one/.github/workflows/dockerise.yaml@main
     with:
       image: "application-one"
-    steps:
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "success",
-              "job": "dockerise",
-              "message": "Docker image built for Application One"
-            }'
 
   end-2-end:
     runs-on: ubuntu-latest
