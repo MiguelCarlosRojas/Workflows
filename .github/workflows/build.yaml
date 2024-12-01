@@ -18,25 +18,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "⚙️ Provisioning testing infrastructure for Application One."
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "in-progress",
-              "job": "provision-infra",
-              "message": "Provisioning infrastructure for testing"
-            }'
 
   dockerise:
     needs: build
-    uses: outofdevops/application-one/.github/workflows/dockerise.yaml@main
-    with:
-      image: "application-one"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t application-one:latest .
+          docker tag application-one:latest ${{ secrets.DOCKER_USERNAME }}/application-one:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/application-one:latest
 
   end-2-end:
     runs-on: ubuntu-latest
@@ -45,19 +48,6 @@ jobs:
       - provision-infra
     steps:
       - run: echo "⚙️ Running E2E tests"
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "in-progress",
-              "job": "end-2-end",
-              "message": "End-to-end testing in progress"
-            }'
 
   promote:
     needs:
@@ -72,38 +62,12 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/promote.yaml/dispatches \
             -d '{"ref":"main","inputs":{"path":"/service-one","image-name":"service-one"}}'
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "success",
-              "job": "promote",
-              "message": "Promotion to production triggered"
-            }'
 
   destroy-infra:
     needs: end-2-end
     runs-on: ubuntu-latest
     steps:
       - run: echo "⚙️ Destroying testing infrastructure for Application One."
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "success",
-              "job": "destroy-infra",
-              "message": "Testing infrastructure destroyed"
-            }'
 
   trigger-dependencies:
     needs: promote
@@ -116,16 +80,3 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.PAT }}"\
             https://api.github.com/repos/outofdevops/application-two/actions/workflows/build.yaml/dispatches \
             -d '{"ref":"main","inputs":{"image-name":"service-one"}}'
-      - run: echo "Notifying monitoring system..."
-        env:
-          MONITORING_API_URL: ${{ secrets.MONITORING_API_URL }}
-          MONITORING_API_KEY: ${{ secrets.MONITORING_API_KEY }}
-        run: |
-          curl -X POST $MONITORING_API_URL \
-            -H "Authorization: Bearer $MONITORING_API_KEY" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "status": "success",
-              "job": "trigger-dependencies",
-              "message": "Triggered dependency workflow for Application Two"
-            }'
