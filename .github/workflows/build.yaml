@@ -12,6 +12,13 @@ jobs:
           echo "Installing dependencies..."
           yarn install
         continue-on-error: false
+      - name: Check build status
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Build step failed!" && exit 1
+          else
+            echo "Build completed successfully!"
+          fi
 
   sast:
     needs: build
@@ -26,6 +33,13 @@ jobs:
           # Simula la ejecución de SAST, reemplaza con tu comando real
           echo "SAST completed successfully!"
         continue-on-error: false
+      - name: Check SAST result
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "SAST step failed!" && exit 1
+          else
+            echo "SAST completed successfully!"
+          fi
 
   provision-infra:
     runs-on: ubuntu-latest
@@ -33,6 +47,13 @@ jobs:
       - run: |
           echo "⚙️ Provisioning testing infrastructure for Application One."
         continue-on-error: false
+      - name: Check infrastructure provisioning
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Infrastructure provisioning failed!" && exit 1
+          else
+            echo "Infrastructure provisioning completed!"
+          fi
 
   dockerise:
     needs: build
@@ -57,6 +78,13 @@ jobs:
           docker tag application-one:latest ${{ secrets.DOCKER_USERNAME }}/application-one:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/application-one:latest
         continue-on-error: false
+      - name: Check Docker build result
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Docker build failed!" && exit 1
+          else
+            echo "Docker image pushed successfully!"
+          fi
 
   end-2-end:
     runs-on: ubuntu-latest
@@ -66,6 +94,13 @@ jobs:
     steps:
       - run: echo "⚙️ Running E2E tests"
         continue-on-error: false
+      - name: Check E2E result
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "E2E tests failed!" && exit 1
+          else
+            echo "E2E tests passed!"
+          fi
 
   promote:
     needs: end-2-end
@@ -79,6 +114,13 @@ jobs:
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/promote.yaml/dispatches \
             -d '{"ref":"main","inputs":{"path":"/service-one","image-name":"service-one"}}'
         continue-on-error: false
+      - name: Check promotion status
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Promotion step failed!" && exit 1
+          else
+            echo "Promotion completed successfully!"
+          fi
 
   destroy-infra:
     needs: end-2-end
@@ -86,6 +128,13 @@ jobs:
     steps:
       - run: echo "⚙️ Destroying testing infrastructure for Application One."
         continue-on-error: false
+      - name: Check infrastructure destruction
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Failed to destroy infrastructure!" && exit 1
+          else
+            echo "Infrastructure destroyed successfully!"
+          fi
 
   trigger-dependencies:
     needs: promote
@@ -99,3 +148,10 @@ jobs:
             https://api.github.com/repos/outofdevops/application-two/actions/workflows/build.yaml/dispatches \
             -d '{"ref":"main","inputs":{"image-name":"service-one"}}'
         continue-on-error: false
+      - name: Check trigger result
+        run: |
+          if [ $? -ne 0 ]; then
+            echo "Trigger dependencies step failed!" && exit 1
+          else
+            echo "Trigger dependencies executed successfully!"
+          fi
