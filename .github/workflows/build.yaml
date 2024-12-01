@@ -14,12 +14,8 @@ jobs:
     needs: build
     uses: outofdevops/shared-workflows/.github/workflows/sast.yaml@main
     with:
-      run-name: "Static Application Security Testing for Application-One" 
-    steps:
-      - name: Notify Slack on SAST Start
-        run: |
-          curl -X POST -H 'Content-type: application/json' --data '{"text":"SAST job started for Application One."}' ${{ secrets.SLACK_WEBHOOK_URL }}
-
+      run-name: "Static Application Security Testing for Application-One"
+  
   provision-infra:
     runs-on: ubuntu-latest
     steps:
@@ -33,10 +29,6 @@ jobs:
     uses: outofdevops/application-one/.github/workflows/dockerise.yaml@main
     with:
       image: "application-one"
-    steps:
-      - name: Notify Slack on Dockerize Start
-        run: |
-          curl -X POST -H 'Content-type: application/json' --data '{"text":"Dockerize job started for Application One."}' ${{ secrets.SLACK_WEBHOOK_URL }}
 
   end-2-end:
     runs-on: ubuntu-latest
@@ -58,7 +50,7 @@ jobs:
       - run: |
           curl -L \
             -X POST \
-            -H "Authorization: Bearer ${{ github.token }}"\ 
+            -H "Authorization: Bearer ${{ github.token }}"\
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/promote.yaml/dispatches \
             -d '{"ref":"main","inputs":{"path":"/service-one","image-name":"service-one"}}'
