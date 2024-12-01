@@ -1,20 +1,21 @@
-# Usa una imagen base de Node.js (o la imagen adecuada para tu proyecto)
+# Use the official Node.js 16 image as the base image
 FROM node:16
 
-# Establece el directorio de trabajo en el contenedor
+# Set the working directory
 WORKDIR /app
 
-# Copia los archivos package.json y package-lock.json (si los tienes)
-COPY package*.json ./
+# Copy package.json and install dependencies
+COPY package.json yarn.lock ./
+RUN yarn install
 
-# Instala las dependencias de la aplicación
-RUN npm install
-
-# Copia todo el código fuente de la aplicación al contenedor
+# Copy the rest of the app's source code
 COPY . .
 
-# Expone el puerto en el que la aplicación escucha (ajústalo según tu aplicación)
+# Build the TypeScript code
+RUN yarn build
+
+# Expose the app on port 3000
 EXPOSE 3000
 
-# Comando para ejecutar la aplicación
-CMD ["npm", "start"]
+# Start the app
+CMD ["yarn", "start"]
