@@ -1,20 +1,20 @@
-# Usar una imagen base oficial de Node.js
-FROM node:16-alpine
+# Usa una imagen base de Node.js (o la imagen adecuada para tu proyecto)
+FROM node:16
 
-# Establecer el directorio de trabajo en el contenedor
+# Establece el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiar el archivo de dependencias
-COPY package.json package-lock.json ./
+# Copia los archivos package.json y package-lock.json (si los tienes)
+COPY package*.json ./
 
-# Instalar las dependencias
+# Instala las dependencias de la aplicación
 RUN npm install
 
-# Copiar el resto del código de la aplicación
+# Copia todo el código fuente de la aplicación al contenedor
 COPY . .
 
-# Exponer el puerto en el que se ejecuta la aplicación
+# Expone el puerto en el que la aplicación escucha (ajústalo según tu aplicación)
 EXPOSE 3000
 
-# Comando para iniciar la aplicación
+# Comando para ejecutar la aplicación
 CMD ["npm", "start"]
