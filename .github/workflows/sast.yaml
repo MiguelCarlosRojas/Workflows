@@ -12,7 +12,7 @@ jobs:
       
   sast:
     needs: build
-    uses: ./.github/workflows/sast.yaml  # Usando el archivo local
+    uses: ./.github/workflows/sast.yaml  # Usando el archivo local en tu repositorio
     with:
       run-name: "Static Application Security Testing for Application-One"
   
