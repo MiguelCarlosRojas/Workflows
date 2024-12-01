@@ -7,6 +7,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Triggered by ${{ github.actor }} with ${{ github.event_name }} event, status is ${{ job.status }}."
+      - name: Install dependencies
+        run: |
+          echo "Installing dependencies..."
+          yarn install
+        continue-on-error: false
 
   sast:
     needs: build
@@ -20,11 +25,14 @@ jobs:
           echo "Running Static Application Security Testing (SAST)..."
           # Simula la ejecución de SAST, reemplaza con tu comando real
           echo "SAST completed successfully!"
+        continue-on-error: false
 
   provision-infra:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "⚙️ Provisioning testing infrastructure for Application One."
+      - run: |
+          echo "⚙️ Provisioning testing infrastructure for Application One."
+        continue-on-error: false
 
   dockerise:
     needs: build
@@ -44,9 +52,11 @@ jobs:
 
       - name: Build and push Docker image
         run: |
+          echo "Building Docker image..."
           docker build -t application-one:latest .
           docker tag application-one:latest ${{ secrets.DOCKER_USERNAME }}/application-one:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/application-one:latest
+        continue-on-error: false
 
   end-2-end:
     runs-on: ubuntu-latest
@@ -55,11 +65,10 @@ jobs:
       - provision-infra
     steps:
       - run: echo "⚙️ Running E2E tests"
+        continue-on-error: false
 
   promote:
-    needs:
-      - end-2-end
-      - sast
+    needs: end-2-end
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -69,12 +78,14 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${{ github.repository }}/actions/workflows/promote.yaml/dispatches \
             -d '{"ref":"main","inputs":{"path":"/service-one","image-name":"service-one"}}'
+        continue-on-error: false
 
   destroy-infra:
     needs: end-2-end
     runs-on: ubuntu-latest
     steps:
       - run: echo "⚙️ Destroying testing infrastructure for Application One."
+        continue-on-error: false
 
   trigger-dependencies:
     needs: promote
@@ -87,3 +98,4 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.PAT }}"\
             https://api.github.com/repos/outofdevops/application-two/actions/workflows/build.yaml/dispatches \
             -d '{"ref":"main","inputs":{"image-name":"service-one"}}'
+        continue-on-error: false
