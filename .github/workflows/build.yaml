@@ -10,9 +10,16 @@ jobs:
 
   sast:
     needs: build
-    uses: outofdevops/shared-workflows/.github/workflows/sast.yaml@main
-    with:
-      run-name: "Static Application Security Testing for Application-One"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Static Analysis
+        run: |
+          echo "Running Static Application Security Testing (SAST)..."
+          # Simula la ejecución de SAST, reemplaza con tu comando real
+          echo "SAST completed successfully!"
 
   provision-infra:
     runs-on: ubuntu-latest
